@@ -12,10 +12,8 @@ PRODUCT_VERSION(1);
 #define REFRESH_PERCENT 0.3
 
 static int32_t scaleReading = 0;
-static int32_t lastScaleReading = 0;
 static int inventoryCount = 0;
 static float temperature = 0;
-static float refreshThreshold = 0.0;
 
 long unsigned int statusInterval = 15 * 60 * 1000;
 static unsigned long lastStatusTime = 0;
@@ -27,7 +25,7 @@ static volatile bool shouldCalibrate = false;
 static volatile bool shouldTare = false;
 static volatile unsigned long unlockTime = 0;
 static bool lastLockState = false;
-
+static bool currentLockState = false;
 Ledger statusLedger;
 
 SerialLogHandler logHandler;
@@ -81,9 +79,8 @@ void setup()
   {
     countsPerUnit = 1;
   }
-  refreshThreshold = countsPerUnit * REFRESH_PERCENT;
 
-  Log.info("Got %ld counts per unit with a refresh threshold of %f", countsPerUnit, refreshThreshold);
+  Log.info("Got %ld counts per unit", countsPerUnit);
   initializeScale();
   delay(2000);
   unlock("");
@@ -115,17 +112,18 @@ void loop()
 
       Log.info("%s", data.toJSON().c_str());
       statusLedger.set(data, particle::Ledger::MERGE);
+      Particle.publish("evt", "LEDGER_SYNC");
 
       lastStatusTime = millis();
     }
   }
-  Log.info("Scale diff %ld raw %ld", abs(scaleReading - lastScaleReading), scaleReading);
-  if (abs(scaleReading - lastScaleReading) > refreshThreshold)
-  {
-    Log.info("Large change detected, forcing a system refresh!");
-    lastStatusTime = 0; // Force a system status update
-  }
-  lastScaleReading = scaleReading;
+  // Log.info("Scale diff %ld raw %ld", abs(scaleReading - lastScaleReading), scaleReading);
+  // if (abs(scaleReading - lastScaleReading) > refreshThreshold)
+  // {
+  //   Log.info("Large change detected, forcing a system refresh!");
+  //   lastStatusTime = 0; // Force a system status update
+  // }
+  // lastScaleReading = scaleReading;
 
   if (shouldUnlock)
   {
@@ -145,7 +143,6 @@ void loop()
   if (shouldCalibrate)
   {
     countsPerUnit = readScale();
-    refreshThreshold = countsPerUnit * REFRESH_PERCENT;
     EEPROM.put(LOCATION_CALIBRATION_FACTOR, countsPerUnit);
 
     shouldCalibrate = false;
@@ -161,13 +158,13 @@ void loop()
   }
 
   // TODO: Test this!!
-  // static bool currentLockState = digitalRead(SOL_STATE_1);
-  // if (currentLockState != lastLockState && !currentLockState)
-  // {
-  //   Log.info("Lock state changed to %d", currentLockState);
-  //   lastStatusTime = 0; // Force a system status update
-  // }
+  currentLockState = digitalRead(SOL_STATE_1);
+  if (currentLockState != lastLockState && !currentLockState)
+  {
+    Log.info("Lock state changed to %d", currentLockState);
+    lastStatusTime = 0; // Force a system status update
+  }
 
-  // lastLockState = digitalRead(SOL_STATE_1);
+  lastLockState = currentLockState;
   delay(250);
 }
