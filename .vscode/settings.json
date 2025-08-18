@@ -8,6 +8,6 @@
         "print": "cpp"
     },
     "editor.formatOnSave": true,
-    "particle.firmwareVersion": "6.3.0",
+    "particle.firmwareVersion": "6.3.3",
     "particle.targetPlatform": "msom"
 }
