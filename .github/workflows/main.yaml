@@ -36,14 +36,12 @@ jobs:
             ${{ steps.compile.outputs.firmware-path }}
             ${{ steps.compile.outputs.target-path }}
 
-      # Create a release for this tag and upload the compiled files to it
-      - name: Create GitHub Release and Upload Assets
+      - name: Create/Update Nightly Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }} # e.g. v1.2.3
-          name: Release ${{ github.ref_name }}
-          draft: false
-          prerelease: false
+          tag_name: nightly
+          name: Nightly
+          prerelease: true
           files: |
             ${{ steps.compile.outputs.firmware-path }}
             ${{ steps.compile.outputs.target-path }}
