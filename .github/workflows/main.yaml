@@ -35,13 +35,3 @@ jobs:
           path: |
             ${{ steps.compile.outputs.firmware-path }}
             ${{ steps.compile.outputs.target-path }}
-
-      - name: Create/Update Nightly Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: nightly
-          name: Nightly
-          prerelease: true
-          files: |
-            ${{ steps.compile.outputs.firmware-path }}
-            ${{ steps.compile.outputs.target-path }}
